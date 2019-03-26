@@ -1,7 +1,20 @@
 ﻿(function(){
 	var attrArray = ['POP_2010', 'POP_2011', 'POP_2012', 'POP_2013', 'POP_2014','POP_2015', 'POP_2016', 'POP_2017', 'POP_2018'];
-	var expressed = attrArray[0]
-	;
+	var expressed = attrArray[0];
+	
+	var chartWidth = window.innerWidth * 0.425,
+    chartHeight = 473,
+    leftPadding = 25,
+    rightPadding = 2,
+    topBottomPadding = 5,
+    chartInnerWidth = chartWidth - leftPadding - rightPadding,
+    chartInnerHeight = chartHeight - topBottomPadding * 2,
+    translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+	
+	var yScale = d3.scaleLinear()
+        .range([463, 0])
+        .domain([0, 40000000]);
+
 window.onload = setMap();
 
 function setMap() {
@@ -18,14 +31,14 @@ function setMap() {
 
     //create Albers equal area conic projection centered on France
 	var projection = d3.geoAlbersUsa() 
-		.scale(1010)
+		.scale(960)
         .translate([width/2, height/2]);
 	
 	var path = d3.geoPath()
 		.projection(projection);
 	
 	d3.queue()
-		.defer(d3.csv, "data/StateBounds.Csv")
+		.defer(d3.csv, "data/StateBounds.csv")
 		.defer(d3.json, "data/USAPOP.json")
 		.await(callback)
 		
@@ -55,13 +68,142 @@ function setMap() {
 		setEnumerationUnits(usaPops, map, path, colorScale);
 		
 		setChart(csvData, colorScale);
+		
+		createDropdown(csvData, colorScale);
 	};
+	
+};
+
+function moveLabel(){
+    //get width of label
+    var labelWidth = d3.select(".infolabel")
+        .node()
+        .getBoundingClientRect()
+        .width;
+
+    //use coordinates of mousemove event to set label coordinates
+    var x1 = d3.event.clientX + 10,
+        y1 = d3.event.clientY - 75,
+        x2 = d3.event.clientX - labelWidth - 10,
+        y2 = d3.event.clientY + 25;
+
+    //horizontal label coordinate, testing for overflow
+    var x = d3.event.clientX > window.innerWidth - labelWidth - 20 ? x2 : x1; 
+    //vertical label coordinate, testing for overflow
+    var y = d3.event.clientY < 75 ? y2 : y1; 
+
+    d3.select(".infolabel")
+        .style("left", x + "px")
+        .style("top", y + "px");
+};
+
+function highlight(props){
+	
+	var selected = d3.selectAll("." + props.Geography)
+		.style("stroke", "blue")
+		.style("stroke-width", "2");
+};
+
+function dehighlight(props){
+    var selected = d3.selectAll("." + props.Geography)
+        .style("stroke", function(){
+            return getStyle(this, "stroke")
+        })
+        .style("stroke-width", function(){
+            return getStyle(this, "stroke-width")
+        });
+
+    function getStyle(element, styleName){
+        var styleText = d3.select(element)
+            .select("desc")
+            .text();
+
+        var styleObject = JSON.parse(styleText);
+
+        return styleObject[styleName];
+    };
+};
+
+function createDropdown(csvData, colorScale){
+    //add select element
+    var dropdown = d3.select("body")
+        .append("select")
+        .attr("class", "dropdown")
+		.on("change", function(){
+			changeAttribute(this.value, csvData)
+		});
+		
+	function changeAttribute(attribute, csvData){
+		
+		expressed = attribute;
+		
+		var colorScale = makeColorScale(csvData);
+		
+		var states = d3.selectAll(".states")
+			.transition()
+			.duration(1000)
+			.style("fill", function(d){
+				return choropleth(d.properties, colorScale)
+			});
+			
+		var bars = d3.selectAll(".bar")
+			//re-sort bars
+			.sort(function(a, b){
+				return b[expressed] - a[expressed];
+			})
+			.transition()
+			.delay(function(d, i){
+				return i * 20
+			})
+			.duration(500);
+		updateChart(bars, csvData.length, colorScale);
+	};
+	
+    //add initial option
+    var titleOption = dropdown.append("option")
+        .attr("class", "titleOption")
+        .attr("disabled", "true")
+        .text("Select Attribute");
+
+    //add attribute name options
+    var attrOptions = dropdown.selectAll("attrOptions")
+        .data(attrArray)
+        .enter()
+        .append("option")
+        .attr("value", function(d){ return d })
+        .text(function(d){ return d });
+};
+
+function updateChart(bars, n, colorScale){
+    //position bars
+    bars.attr("x", function(d, i){
+            return i * (chartInnerWidth / n) + leftPadding;
+        })
+        //size/resize bars
+        .attr("height", function(d, i){
+            return 463 - yScale(parseFloat(d[expressed]));
+        })
+        .attr("y", function(d, i){
+            return yScale(parseFloat(d[expressed])) + topBottomPadding;
+        })
+        //color/recolor bars
+        .style("fill", function(d){
+            return choropleth(d, colorScale);
+        });
+	var chartTitle = d3.select(".chartTitle")
+		.text("Population of each state in "+ String(expressed).slice(4,8));
 };
 
 function setChart(csvData, colorScale){
     //chart frame dimensions
     var chartWidth = window.innerWidth * 0.425,
-        chartHeight = 460;
+		chartHeight = 473,
+		leftPadding = 25,
+		rightPadding = 2,
+		topBottomPadding = 5,
+		chartInnerWidth = chartWidth - leftPadding - rightPadding,
+		chartInnerHeight = chartHeight - topBottomPadding * 2,
+		translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
     //create a second svg element to hold the bar chart
     var chart = d3.select("body")
@@ -69,25 +211,74 @@ function setChart(csvData, colorScale){
         .attr("width", chartWidth)
         .attr("height", chartHeight)
         .attr("class", "chart");
+	
+	var chartBackground = chart.append("rect")
+		.attr("class", "chartBackground")
+		.attr("width", chartInnerWidth)
+		.attr("height", chartInnerHeight)
+		.attr("transform", translate);
+	
+	var yScale = d3.scaleLinear()
+        .range([463, 0])
+        .domain([0, 40000000]);
+	
+	var bars = chart.selectAll(".bars")
+        .data(csvData)
+        .enter()
+        .append("rect")
+		.sort(function(a, b){
+			return a[expressed]-b[expressed]
+		})
+        .attr("class", function(d){
+            return "bar " + d.Geography;
+        })
+        .attr("width", chartWidth / csvData.length - 1)
+        .on("mouseover", highlight)
+		.on("mouseout", dehighlight)
+		.on("mousemove", moveLabel);
+		
+	var desc = bars.append("desc")
+        .text('{"stroke": "none", "stroke-width": "0px"}');
+		
+	var chartTitle = chart.append("text")
+		.attr("x", 40)
+		.attr("y", 40)
+		.attr("class", "chartTitle")
+		.text("Population of each state in "+ String(expressed).slice(4,8));
+		
+	var yAxis = d3.axisLeft(yScale);
+		
+	var axis = chart.append("g")
+		.attr("class", "axis")
+		.attr("transform", translate)
+		.call(yAxis);
+			
+	var chartFrame = chart.append("rect")
+		.attr("class", "chartFrame")
+		.attr("width", chartInnerWidth)
+		.attr("height", chartInnerHeight)
+		.attr("transform", translate);
+	updateChart(bars, csvData.length, colorScale);
+		
 };
 
 function setGraticule(map,path){
 
 	var graticule = d3.geoGraticule()
-	.step([5,5]);
+		.step([5,5]);
 
-var gratBackground = map.append("path")
-	.datum(graticule.outline()) //bind graticule background
-	.attr("class", "gratBackground") //assign class for styling
-	.attr("d", path) //project graticule
-
-var gratLines = map.selectAll(".gratLines") //select graticule elements that will be created
-	.data(graticule.lines()) //bind graticule lines to each element to be created
-	.enter() //create an element for each datum
-	.append("path") //append each element to the svg as a path element
-	.attr("class", "gratLines") //assign class for styling
-	.attr("d", path); //project graticule lines
-};
+	var gratBackground = map.append("path")
+		.datum(graticule.outline()) //bind graticule background
+		.attr("class", "gratBackground") //assign class for styling
+		.attr("d", path) //project graticule
+	
+	var gratLines = map.selectAll(".gratLines") //select graticule elements that will be created
+		.data(graticule.lines()) //bind graticule lines to each element to be created
+		.enter() //create an element for each datum
+		.append("path") //append each element to the svg as a path element
+		.attr("class", "gratLines") //assign class for styling
+		.attr("d", path); //project graticule lines
+	};
 
 function joinData(usaPops, csvData){
 	var attrArray = ['Pop_2010', 'Pop_2011', 'Pop_2012', 'Pop_2013', 'Pop_2014','Pop_2015', 'Pop_2016', 'Pop_2017', 'Pop_2018'];
@@ -99,7 +290,7 @@ function joinData(usaPops, csvData){
 		for (var a=0; a<usaPops.length; a++){
 
 			var geoJsonProps = usaPops[a].properties;
-			var geoJsonKey = geoJsonProps.NAME;
+			var geoJsonKey = geoJsonProps.Geography;
 
 			if(geoJsonKey == csvKey){
 
@@ -118,25 +309,25 @@ function setEnumerationUnits(usaPops, map, path, colorScale){
 			.enter()
 			.append("path")
 			.attr("class", function(d){
-				return "states " + d.properties.NAME; 
+				return "states " + d.properties.Geography; 
 			})
 			.attr("d", path)
 			.style("fill", function(d){
-				console.log(colorScale(d.properties[expressed]));
-				console.log(d.properties[expressed]);
 				return choropleth(d.properties, colorScale);
-			});
+			})
+			.on("mouseover", function(d){
+				highlight(d.properties);
+			})
+			.on("mouseout", function(d){
+            dehighlight(d.properties);
+			})
+			.on("mousemove", moveLabel);
+			
+	var desc = states.append("desc")
+        .text('{"stroke": "#000", "stroke-width": "0.5px"}');
+			
 		};
 function makeColorScale(data){
-	/*var colorClasses = [
-		"#D4B9DA",
-        "#C994C7",
-        "#DF65B0",
-        "#DD1C77",
-        "#980043",
-		"#FAB9DF",
-		
-	];*/
 	
 	var colorClasses = [
 		"#E50500",
