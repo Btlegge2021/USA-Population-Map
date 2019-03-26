@@ -74,6 +74,25 @@ function setMap() {
 	
 };
 
+function setLabel(props){
+    //label content
+    var labelAttribute = "<h1>" + props[expressed] +
+        "</h1><b>" + expressed.slice(4,8) + "</b>";
+		
+	console.log(labelAttribute);
+	
+    //create info label div
+    var infolabel = d3.select("body")
+        .append("div")
+        .attr("class", "infolabel")
+        .attr("id", props.Geography + "_label")
+        .html(labelAttribute);
+
+    var stateName = infolabel.append("div")
+        .attr("class", "labelname")
+        .html(props.Geography);
+};
+
 function moveLabel(){
     //get width of label
     var labelWidth = d3.select(".infolabel")
@@ -99,6 +118,8 @@ function moveLabel(){
 
 function highlight(props){
 	
+	setLabel(props);
+	
 	var selected = d3.selectAll("." + props.Geography)
 		.style("stroke", "blue")
 		.style("stroke-width", "2");
@@ -122,6 +143,8 @@ function dehighlight(props){
 
         return styleObject[styleName];
     };
+	d3.select(".infolabel")
+		.remove();
 };
 
 function createDropdown(csvData, colorScale){
@@ -171,7 +194,7 @@ function createDropdown(csvData, colorScale){
         .enter()
         .append("option")
         .attr("value", function(d){ return d })
-        .text(function(d){ return d });
+        .text(function(d){ return d.slice(4,8) });
 };
 
 function updateChart(bars, n, colorScale){
