@@ -88,3 +88,9 @@ option {
     padding: 5px 10px;
     top: -75px;
 }
+.infolabel h1 {
+    margin: 0 20px 0 0;
+    padding: 0;
+    display: inline-block;
+    line-height: 1em;
+}

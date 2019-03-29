@@ -23,7 +23,7 @@ function setMap() {
         height = 460;
 
     //create new svg container for the map
-    var map = d3.select("body")
+    var map = d3.select(".d3Stuff")
         .append("svg")
         .attr("class", "map")
         .attr("width", width)
@@ -76,16 +76,19 @@ function setMap() {
 
 function setLabel(props){
     //label content
+	var popCount = Math.round(parseInt(props[expressed])/1000000)
+	
+	console.log(popCount);
+	
     var labelAttribute = "<h1>" + props[expressed] +
         "</h1><b>" + expressed.slice(4,8) + "</b>";
 		
-	console.log(labelAttribute);
 	
     //create info label div
-    var infolabel = d3.select("body")
+    var infolabel = d3.select(".d3Stuff")
         .append("div")
         .attr("class", "infolabel")
-        .attr("id", props.Geography + "_label")
+        .attr("id", props.Id + "_label")
         .html(labelAttribute);
 
     var stateName = infolabel.append("div")
@@ -120,13 +123,13 @@ function highlight(props){
 	
 	setLabel(props);
 	
-	var selected = d3.selectAll("." + props.Geography)
+	var selected = d3.selectAll("." + props.Id)
 		.style("stroke", "blue")
 		.style("stroke-width", "2");
 };
 
 function dehighlight(props){
-    var selected = d3.selectAll("." + props.Geography)
+    var selected = d3.selectAll("." + props.Id)
         .style("stroke", function(){
             return getStyle(this, "stroke")
         })
@@ -149,7 +152,7 @@ function dehighlight(props){
 
 function createDropdown(csvData, colorScale){
     //add select element
-    var dropdown = d3.select("body")
+    var dropdown = d3.select(".d3Stuff")
         .append("select")
         .attr("class", "dropdown")
 		.on("change", function(){
@@ -229,7 +232,7 @@ function setChart(csvData, colorScale){
 		translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
     //create a second svg element to hold the bar chart
-    var chart = d3.select("body")
+    var chart = d3.select(".d3Stuff")
         .append("svg")
         .attr("width", chartWidth)
         .attr("height", chartHeight)
@@ -253,7 +256,7 @@ function setChart(csvData, colorScale){
 			return a[expressed]-b[expressed]
 		})
         .attr("class", function(d){
-            return "bar " + d.Geography;
+            return "bar " + d.Id;
         })
         .attr("width", chartWidth / csvData.length - 1)
         .on("mouseover", highlight)
@@ -308,12 +311,12 @@ function joinData(usaPops, csvData){
 		
 		for (var i=0; i<csvData.length; i++){
 			var csvRegion = csvData[i];
-			var csvKey = csvRegion.Geography;
+			var csvKey = csvRegion.Id;
 
 		for (var a=0; a<usaPops.length; a++){
 
 			var geoJsonProps = usaPops[a].properties;
-			var geoJsonKey = geoJsonProps.Geography;
+			var geoJsonKey = geoJsonProps.Id;
 
 			if(geoJsonKey == csvKey){
 
@@ -332,7 +335,7 @@ function setEnumerationUnits(usaPops, map, path, colorScale){
 			.enter()
 			.append("path")
 			.attr("class", function(d){
-				return "states " + d.properties.Geography; 
+				return "states " + d.properties.Id; 
 			})
 			.attr("d", path)
 			.style("fill", function(d){
