@@ -2,10 +2,10 @@
 	var attrArray = ['POP_2010', 'POP_2011', 'POP_2012', 'POP_2013', 'POP_2014','POP_2015', 'POP_2016', 'POP_2017', 'POP_2018'];
 	var expressed = attrArray[0];
 	
-	var chartWidth = window.innerWidth * 0.425,
+	var chartWidth = window.innerWidth * 0.5,
     chartHeight = 473,
-    leftPadding = 25,
-    rightPadding = 2,
+    leftPadding = 50,
+    rightPadding = 20,
     topBottomPadding = 5,
     chartInnerWidth = chartWidth - leftPadding - rightPadding,
     chartInnerHeight = chartHeight - topBottomPadding * 2,
@@ -19,11 +19,11 @@ window.onload = setMap();
 
 function setMap() {
 	//map frame dimensions
-    var width = window.innerWidth * 0.5,
+    var width = window.innerWidth * 0.425,
         height = 460;
 
     //create new svg container for the map
-    var map = d3.select(".d3Stuff")
+    var map = d3.select(".d3Tags")
         .append("svg")
         .attr("class", "map")
         .attr("width", width)
@@ -49,13 +49,6 @@ function setMap() {
 		var usaStates = topojson.feature(usa, usa.objects.USAPOP),
 			usaPops = topojson.feature(usa, usa.objects.USAPOP).features;
 		
-		
-		console.log(csvData);
-		console.log(error);
-		console.log(usa);
-		console.log(usaStates);
-		console.log(usaPops);
-		
 		var pops = map.append("path")
 			.datum(usaStates)
 			.attr("class", "pops")
@@ -76,16 +69,12 @@ function setMap() {
 
 function setLabel(props){
     //label content
-	var popCount = Math.round(parseInt(props[expressed])/1000000)
-	
-	console.log(popCount);
-	
     var labelAttribute = "<h1>" + props[expressed] +
         "</h1><b>" + expressed.slice(4,8) + "</b>";
 		
 	
     //create info label div
-    var infolabel = d3.select(".d3Stuff")
+    var infolabel = d3.select(".d3Tags")
         .append("div")
         .attr("class", "infolabel")
         .attr("id", props.Id + "_label")
@@ -152,7 +141,7 @@ function dehighlight(props){
 
 function createDropdown(csvData, colorScale){
     //add select element
-    var dropdown = d3.select(".d3Stuff")
+    var dropdown = d3.select(".d3Tags")
         .append("select")
         .attr("class", "dropdown")
 		.on("change", function(){
@@ -222,17 +211,18 @@ function updateChart(bars, n, colorScale){
 
 function setChart(csvData, colorScale){
     //chart frame dimensions
-    var chartWidth = window.innerWidth * 0.425,
+	console.log(window.innerWidth);
+    var chartWidth = (window.innerWidth * 0.5),
 		chartHeight = 473,
-		leftPadding = 25,
-		rightPadding = 2,
+		leftPadding = 50,
+		rightPadding = 20,
 		topBottomPadding = 5,
 		chartInnerWidth = chartWidth - leftPadding - rightPadding,
-		chartInnerHeight = chartHeight - topBottomPadding * 2,
+		chartInnerHeight = chartHeight - topBottomPadding *2 ,
 		translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
     //create a second svg element to hold the bar chart
-    var chart = d3.select(".d3Stuff")
+    var chart = d3.select(".d3Tags")
         .append("svg")
         .attr("width", chartWidth)
         .attr("height", chartHeight)
@@ -267,7 +257,7 @@ function setChart(csvData, colorScale){
         .text('{"stroke": "none", "stroke-width": "0px"}');
 		
 	var chartTitle = chart.append("text")
-		.attr("x", 40)
+		.attr("x", 80)
 		.attr("y", 40)
 		.attr("class", "chartTitle")
 		.text("Population of each state in "+ String(expressed).slice(4,8));
