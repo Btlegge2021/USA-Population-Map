@@ -1,7 +1,9 @@
 ﻿(function(){
+	//An array to access the fields in the csv and topojson
 	var attrArray = ['POP_2010', 'POP_2011', 'POP_2012', 'POP_2013', 'POP_2014','POP_2015', 'POP_2016', 'POP_2017', 'POP_2018'];
 	var expressed = attrArray[0];
 	
+	//chartwindow dimensions
 	var chartWidth = window.innerWidth * 0.5,
     chartHeight = 473,
     leftPadding = 50,
@@ -108,6 +110,7 @@ function moveLabel(){
         .style("top", y + "px");
 };
 
+//function used to highlight bars and states
 function highlight(props){
 	
 	setLabel(props);
@@ -117,6 +120,7 @@ function highlight(props){
 		.style("stroke-width", "2");
 };
 
+//function to dehighlight bars or states
 function dehighlight(props){
     var selected = d3.selectAll("." + props.Id)
         .style("stroke", function(){
@@ -139,6 +143,7 @@ function dehighlight(props){
 		.remove();
 };
 
+//function to get attrbute array and create a drop down
 function createDropdown(csvData, colorScale){
     //add select element
     var dropdown = d3.select(".d3Tags")
@@ -189,6 +194,7 @@ function createDropdown(csvData, colorScale){
         .text(function(d){ return d.slice(4,8) });
 };
 
+//function to update chart bars on drop down selection
 function updateChart(bars, n, colorScale){
     //position bars
     bars.attr("x", function(d, i){
