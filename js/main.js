@@ -116,7 +116,7 @@ function highlight(props){
 	setLabel(props);
 	
 	var selected = d3.selectAll("." + props.Id)
-		.style("stroke", "blue")
+		.style("stroke", "yellow")
 		.style("stroke-width", "2");
 };
 
@@ -254,7 +254,7 @@ function setChart(csvData, colorScale){
         .attr("class", function(d){
             return "bar " + d.Id;
         })
-        .attr("width", chartWidth / csvData.length - 1)
+        .attr("width", chartWidth / csvData.length - 1.7)
         .on("mouseover", highlight)
 		.on("mouseout", dehighlight)
 		.on("mousemove", moveLabel);
